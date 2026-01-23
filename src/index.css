@@ -19,3 +19,13 @@ html, body {
   height: 100vh;
   width: 100vw;
 }
+
+/* Custom arrow icon styles */
+.custom-arrow-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-arrow-icon svg {
+  display: block;
+}
