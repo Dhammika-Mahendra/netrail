@@ -8,7 +8,7 @@ import arrowSvg from '../assets/arrow.svg?raw'
 
 // Component to animate marker
 // direction: 'forward' | 'backward'
-function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5, direction = 'forward' }) {
+function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5, direction = 'forward', loop = true }) {
   const [position, setPosition] = useState(null)
   const [rotation, setRotation] = useState(0)
   const indexRef = useRef(0)
@@ -51,12 +51,23 @@ function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5, directio
       setPosition([points[0][1], points[0][0]])
     }
 
-    // Animation loop
     const intervalId = setInterval(() => {
+      // If we don't loop and we're already at the last point, stop
+      if (!loop && indexRef.current >= pointsRef.current.length - 1) {
+        clearInterval(intervalId)
+        return
+      }
+
       indexRef.current += 1
       
       if (indexRef.current >= pointsRef.current.length) {
-        indexRef.current = 0 // Loop back to start
+        if (loop) {
+          indexRef.current = 0 // Loop back to start
+        } else {
+          indexRef.current = pointsRef.current.length - 1
+          clearInterval(intervalId)
+          return
+        }
       }
       
       const currentPoint = pointsRef.current[indexRef.current]
@@ -72,10 +83,10 @@ function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5, directio
         )
         setRotation(bearing)
       }
-    }, speedMs) // Update interval time
+    }, speedMs)
 
     return () => clearInterval(intervalId)
-  }, [pathCoordinates, speedMs, stepKm, direction])
+  }, [pathCoordinates, speedMs, stepKm, direction, loop])
 
   if (!position) return null
 
@@ -155,12 +166,12 @@ export default function Map() {
         {
           // Configure markers as flexible routes built from base paths
           [
-            // Marker following only path 1
-            { key: 'path-1', indices: [2], speedMs: 50, stepKm: 0.5, direction: 'forward' },
-            // Marker following only path 2
-            { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5, direction: 'backward' },
-            // Marker that goes along path 1 then path 2
-            { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5, direction: 'forward' },
+            // Marker following only path 1 (loops)
+            { key: 'path-1', indices: [2], speedMs: 50, stepKm: 0.5, direction: 'forward', loop: true },
+            // Marker following only path 2 (reverse, stops at end)
+            { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5, direction: 'backward', loop: false },
+            // Marker that goes along path 1 then path 2 (loops)
+            { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5, direction: 'forward', loop: true },
           ].map(config => {
             const route = buildRoute(paths, config.indices)
             if (!route.length) return null
@@ -171,6 +182,7 @@ export default function Map() {
                 speedMs={config.speedMs}
                 stepKm={config.stepKm}
                 direction={config.direction}
+                loop={config.loop}
               />
             )
           })
