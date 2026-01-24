@@ -5,6 +5,7 @@ import * as turf from '@turf/turf'
 import 'leaflet/dist/leaflet.css'
 import pathDataUrl from '../assets/path.geojson?url'
 import arrowSvg from '../assets/arrow.svg?raw'
+import { useAppContext } from '../context/AppContext'
 
 // Component to animate marker
 // direction: 'forward' | 'backward'
@@ -112,6 +113,9 @@ function buildRoute(paths, indices) {
 }
 
 export default function Map() {
+
+  const { trains } = useAppContext()
+
   const [pathData, setPathData] = useState(null)
   const [paths, setPaths] = useState([])
   
@@ -149,10 +153,6 @@ export default function Map() {
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
         {pathData && (
           <GeoJSON 
             data={pathData}
@@ -165,14 +165,7 @@ export default function Map() {
         )}
         {
           // Configure markers as flexible routes built from base paths
-          [
-            // Marker following only path 1 (loops)
-            { key: 'path-1', indices: [2], speedMs: 50, stepKm: 0.5, direction: 'forward', loop: true },
-            // Marker following only path 2 (reverse, stops at end)
-            { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5, direction: 'backward', loop: false },
-            // Marker that goes along path 1 then path 2 (loops)
-            { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5, direction: 'forward', loop: true },
-          ].map(config => {
+          trains.map(config => {
             const route = buildRoute(paths, config.indices)
             if (!route.length) return null
             return (

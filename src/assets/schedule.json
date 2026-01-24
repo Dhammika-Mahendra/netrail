@@ -2,22 +2,22 @@
     {
         "train":1,
         "track":[2],
-        "start":50,
-        "end":150,
+        "start":20,
+        "end":100,
         "direction":"forward"
     },
     {
         "train":2,
         "track":[1],
-        "start":200,
-        "end":300,
+        "start":0,
+        "end":120,
         "direction":"backward"
     },
     {
         "train":3,
         "track":[0,1],
-        "start":120,
-        "end":220,
+        "start":60,
+        "end":120,
         "direction":"forward"
     }
 ]

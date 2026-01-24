@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useAppContext } from '../context/AppContext'
 
 export default function Counter() {
+
   const [value, setValue] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
   const dialRef = useRef(null)
@@ -11,7 +13,7 @@ export default function Counter() {
 
     const id = setInterval(() => {
       setValue(prev => {
-        if (prev >= 100) {
+        if (prev >= 120) {
           return 1
         }
         return prev + 1
@@ -100,6 +102,7 @@ export default function Counter() {
           height="180"
           viewBox="0 0 180 180"
           className="drop-shadow-sm"
+          style={{ filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1))' }}
         >
           {/* Track */}
           <circle
@@ -110,6 +113,29 @@ export default function Counter() {
             strokeWidth="10"
             fill="white"
           />
+
+          {/* Scale marks - 12 positions around the dial */}
+          {Array.from({ length: 12 }).map((_, i) => {
+            const markAngle = (i / 12) * twoPi
+            const markRadius = radius -4
+            const markX = center - markRadius * Math.sin(markAngle)
+            const markY = center + markRadius * Math.cos(markAngle)
+            const outerX = center - (markRadius + 8) * Math.sin(markAngle)
+            const outerY = center + (markRadius + 8) * Math.cos(markAngle)
+            
+            return (
+              <line
+                key={i}
+                x1={markX}
+                y1={markY}
+                x2={outerX}
+                y2={outerY}
+                stroke="#a2b0c7ff"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            )
+          })}
 
           {/* Draggable marker */}
           <g
@@ -129,10 +155,10 @@ export default function Counter() {
             <circle
               cx={markerX}
               cy={markerY}
-              r={9}
+              r={7}
               fill="#FFFFFF"
               stroke="#2563EB"
-              strokeWidth="3"
+              strokeWidth="1"
               style={{ pointerEvents: 'none' }}
             />
             <circle 
@@ -177,17 +203,6 @@ export default function Counter() {
           </svg>
         </button>
 
-        {/* Time speed scale slider */}
-        <div className="flex flex-col items-center w-full">
-          <input
-            type="range"
-            min={1}
-            max={15}
-            step={1}
-            className="w-40 h-[2px] accent-blue-500"
-            style={{ cursor: 'pointer' }}
-          />
-        </div>
       </div>
     </div>
   )
