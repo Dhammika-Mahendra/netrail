@@ -7,7 +7,8 @@ import pathDataUrl from '../assets/path.geojson?url'
 import arrowSvg from '../assets/arrow.svg?raw'
 
 // Component to animate marker
-function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5 }) {
+// direction: 'forward' | 'backward'
+function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5, direction = 'forward' }) {
   const [position, setPosition] = useState(null)
   const [rotation, setRotation] = useState(0)
   const indexRef = useRef(0)
@@ -21,7 +22,7 @@ function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5 }) {
     const length = turf.length(line, { units: 'kilometers' })
 
     // Generate points along the line
-    const points = []
+    let points = []
     const step = stepKm // kilometers
     for (let i = 0; i <= length; i += step) {
       const point = turf.along(line, i, { units: 'kilometers' })
@@ -35,6 +36,11 @@ function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5 }) {
           points[points.length - 1][1] !== lastCoord[1]) {
         points.push(lastCoord)
       }
+    }
+
+    // Reverse for backward direction
+    if (direction === 'backward') {
+      points = [...points].reverse()
     }
     
     pointsRef.current = points
@@ -69,7 +75,7 @@ function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5 }) {
     }, speedMs) // Update interval time
 
     return () => clearInterval(intervalId)
-  }, [pathCoordinates, speedMs, stepKm])
+  }, [pathCoordinates, speedMs, stepKm, direction])
 
   if (!position) return null
 
@@ -150,11 +156,11 @@ export default function Map() {
           // Configure markers as flexible routes built from base paths
           [
             // Marker following only path 1
-            { key: 'path-1', indices: [0,2], speedMs: 50, stepKm: 0.5 },
+            { key: 'path-1', indices: [2], speedMs: 50, stepKm: 0.5, direction: 'forward' },
             // Marker following only path 2
-            { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5 },
+            { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5, direction: 'backward' },
             // Marker that goes along path 1 then path 2
-            { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5 },
+            { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5, direction: 'forward' },
           ].map(config => {
             const route = buildRoute(paths, config.indices)
             if (!route.length) return null
@@ -164,6 +170,7 @@ export default function Map() {
                 pathCoordinates={route}
                 speedMs={config.speedMs}
                 stepKm={config.stepKm}
+                direction={config.direction}
               />
             )
           })
