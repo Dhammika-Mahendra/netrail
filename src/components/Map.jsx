@@ -83,6 +83,17 @@ function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5 }) {
   return <Marker position={position} icon={arrowIconWithRotation} />
 }
 
+// Build a route by combining one or more base paths by index
+function buildRoute(paths, indices) {
+  return indices.reduce((acc, idx) => {
+    const segment = paths[idx]
+    if (segment && segment.length) {
+      return acc.concat(segment)
+    }
+    return acc
+  }, [])
+}
+
 export default function Map() {
   const [pathData, setPathData] = useState(null)
   const [paths, setPaths] = useState([])
@@ -135,30 +146,29 @@ export default function Map() {
             }}
           />
         )}
-        {/* Marker on line 1 (index 0) */}
-        {paths[0] && (
-          <AnimatedMarker
-            pathCoordinates={paths[0]}
-            speedMs={100} // slower marker
-            stepKm={0.5}
-          />
-        )}
-        {/* Marker on line 2 (index 1) */}
-        {paths[1] && (
-          <AnimatedMarker
-            pathCoordinates={paths[1]}
-            speedMs={300} // faster marker
-            stepKm={0.5}
-          />
-        )}
-        {paths[0] && (
-          <AnimatedMarker
-            pathCoordinates={paths[0]}
-            speedMs={1000}
-            stepKm={0.5}
-          />
-        )}
-        </MapContainer>
+        {
+          // Configure markers as flexible routes built from base paths
+          [
+            // Marker following only path 1
+            { key: 'path-1', indices: [0,2], speedMs: 50, stepKm: 0.5 },
+            // Marker following only path 2
+            { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5 },
+            // Marker that goes along path 1 then path 2
+            { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5 },
+          ].map(config => {
+            const route = buildRoute(paths, config.indices)
+            if (!route.length) return null
+            return (
+              <AnimatedMarker
+                key={config.key}
+                pathCoordinates={route}
+                speedMs={config.speedMs}
+                stepKm={config.stepKm}
+              />
+            )
+          })
+        }
+      </MapContainer>
     </div>
   )
 }
