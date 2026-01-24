@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { MapContainer, TileLayer, GeoJSON, Marker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, GeoJSON, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import * as turf from '@turf/turf'
 import 'leaflet/dist/leaflet.css'
@@ -7,10 +7,9 @@ import pathDataUrl from '../assets/path.geojson?url'
 import arrowSvg from '../assets/arrow.svg?raw'
 
 // Component to animate marker
-function AnimatedMarker({ pathCoordinates }) {
+function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5 }) {
   const [position, setPosition] = useState(null)
   const [rotation, setRotation] = useState(0)
-  const map = useMap()
   const indexRef = useRef(0)
   const pointsRef = useRef([])
 
@@ -20,10 +19,10 @@ function AnimatedMarker({ pathCoordinates }) {
     // Create a LineString from the coordinates
     const line = turf.lineString(pathCoordinates)
     const length = turf.length(line, { units: 'kilometers' })
-    
-    // Generate points along the line (every 0.5km for smooth animation)
+
+    // Generate points along the line
     const points = []
-    const step = 0.5 // kilometers
+    const step = stepKm // kilometers
     for (let i = 0; i <= length; i += step) {
       const point = turf.along(line, i, { units: 'kilometers' })
       points.push(point.geometry.coordinates)
@@ -39,6 +38,7 @@ function AnimatedMarker({ pathCoordinates }) {
     }
     
     pointsRef.current = points
+    indexRef.current = 0
     
     // Set initial position
     if (points.length > 0) {
@@ -66,18 +66,18 @@ function AnimatedMarker({ pathCoordinates }) {
         )
         setRotation(bearing)
       }
-    }, 100) // Update every 100ms for smooth animation
+    }, speedMs) // Update interval time
 
     return () => clearInterval(intervalId)
-  }, [pathCoordinates])
+  }, [pathCoordinates, speedMs, stepKm])
 
   if (!position) return null
 
   const arrowIconWithRotation = L.divIcon({
     className: 'custom-arrow-icon',
-    html: `<div style="width: 32px; height: 32px; transform: rotate(${rotation}deg); transition: transform 0.1s linear;">${arrowSvg}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    html: `<div style="width: 16px; height: 16px; transform: rotate(${rotation}deg); transition: transform 0.1s linear;">${arrowSvg}</div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
   })
 
   return <Marker position={position} icon={arrowIconWithRotation} />
@@ -85,7 +85,7 @@ function AnimatedMarker({ pathCoordinates }) {
 
 export default function Map() {
   const [pathData, setPathData] = useState(null)
-  const [pathCoordinates, setPathCoordinates] = useState(null)
+  const [paths, setPaths] = useState([])
   
   // Sri Lanka center coordinates
   const center = [7.8731, 80.7718]
@@ -96,14 +96,18 @@ export default function Map() {
       .then(response => response.json())
       .then(data => {
         setPathData(data)
-        
-        // Extract the path with id=1
-        const feature = data.features.find(f => f.properties.id === 1)
-        if (feature && feature.geometry.type === 'MultiLineString') {
-          // Get the first line string from MultiLineString
-          const coordinates = feature.geometry.coordinates[0]
-          setPathCoordinates(coordinates)
-        }
+
+        // Extract one path per feature (all MultiLineString features)
+        const allPaths = (data.features || [])
+          .filter(f => f.geometry && f.geometry.type === 'MultiLineString')
+          .map(f => {
+            const coords = f.geometry.coordinates || []
+            // Each feature here has a single line inside the MultiLineString
+            return coords[0] || []
+          })
+          .filter(p => p.length > 0)
+
+        setPaths(allPaths)
       })
   }, [])
 
@@ -131,8 +135,30 @@ export default function Map() {
             }}
           />
         )}
-        {pathCoordinates && <AnimatedMarker pathCoordinates={pathCoordinates} />}
-      </MapContainer>
+        {/* Marker on line 1 (index 0) */}
+        {paths[0] && (
+          <AnimatedMarker
+            pathCoordinates={paths[0]}
+            speedMs={100} // slower marker
+            stepKm={0.5}
+          />
+        )}
+        {/* Marker on line 2 (index 1) */}
+        {paths[1] && (
+          <AnimatedMarker
+            pathCoordinates={paths[1]}
+            speedMs={300} // faster marker
+            stepKm={0.5}
+          />
+        )}
+        {paths[0] && (
+          <AnimatedMarker
+            pathCoordinates={paths[0]}
+            speedMs={1000}
+            stepKm={0.5}
+          />
+        )}
+        </MapContainer>
     </div>
   )
 }
