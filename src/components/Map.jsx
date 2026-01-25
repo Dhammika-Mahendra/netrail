@@ -63,12 +63,15 @@ export default function Map() {
   }, [])
 
   //-------------------------------------------------------
-  //      Dynamically add markers based on schedule data
+  //      Dynamically add and remove markers based on schedule data
   //-------------------------------------------------------
   useEffect(() => {
-    // Create timers for each train in the schedule
-    const timers = scheduleData.map((train) => {
-      return setTimeout(() => {
+    const timers = []
+
+    // Create add timers for each train in the schedule
+    scheduleData.forEach((train) => {
+      // Timer to add the marker
+      const addTimer = setTimeout(() => {
         setTrains(prevTrains => [
           ...prevTrains,
           {
@@ -82,6 +85,17 @@ export default function Map() {
           }
         ])
       }, train.start * 1000) // Convert seconds to milliseconds
+      
+      timers.push(addTimer)
+
+      // Timer to remove the marker
+      if (train.end !== undefined) {
+        const removeTimer = setTimeout(() => {
+          setTrains(prevTrains => prevTrains.filter(t => t.id !== train.id))
+        }, train.end * 1000) // Convert seconds to milliseconds
+        
+        timers.push(removeTimer)
+      }
     })
 
     // Cleanup all timers on unmount

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './index.css'
 import { AppProvider } from './context/AppContext'
 import Nav from './components/Nav'

@@ -3,7 +3,7 @@ import * as turf from '@turf/turf'
 import arrowSvg from '../assets/arrow.svg?raw'
 import { Marker } from 'react-leaflet'
 
-export default function AnimatedMarker({ pathCoordinates, speedMs = 500, stepKm = 0.5, direction = 'forward', loop = true }) {
+export default function AnimatedMarker({ pathCoordinates, speedMs, stepKm=0.2 , direction, loop }) {
   const [position, setPosition] = useState(null)
   const [rotation, setRotation] = useState(0)
   const indexRef = useRef(0)
