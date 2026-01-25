@@ -1,23 +1,29 @@
 [
     {
-        "train":1,
-        "track":[2],
-        "start":20,
+        "id":3,
+        "basePath":[2],
+        "start":10,
         "end":100,
-        "direction":"forward"
+        "direction":"forward",
+        "speedMs": 30, 
+        "stepKm": 0.3 
     },
     {
-        "train":2,
-        "track":[1],
-        "start":0,
+        "id":4,
+        "basePath":[1],
+        "start":15,
         "end":120,
-        "direction":"backward"
+        "direction":"backward",
+        "speedMs": 30, 
+        "stepKm": 0.3 
     },
     {
-        "train":3,
-        "track":[0,1],
-        "start":60,
+        "id":5,
+        "basePath":[0,1],
+        "start":20,
         "end":120,
-        "direction":"forward"
+        "direction":"forward",
+        "speedMs": 30, 
+        "stepKm": 0.3 
     }
 ]

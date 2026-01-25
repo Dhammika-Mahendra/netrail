@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import pathDataUrl from '../assets/path.geojson?url'
 import { useAppContext } from '../context/AppContext'
 import AnimatedMarker from './AnimatedMarker'
+import scheduleData from '../assets/schedule.json'
 
 export default function Map() {
 
@@ -19,8 +20,8 @@ export default function Map() {
   //      Map path functions
   //-------------------------------------------------------
   // Build a route by combining one or more base paths by index
-  const buildRoute = (paths, indices) => {
-    return indices.reduce((acc, idx) => {
+  const buildRoute = (paths, basePath) => {
+    return basePath.reduce((acc, idx) => {
       const segment = paths[idx]
       if (segment && segment.length) {
         return acc.concat(segment)
@@ -33,7 +34,7 @@ export default function Map() {
   const trainRoutes = useMemo(() => {
     return trains.map(config => ({
       id: config.id,
-      route: buildRoute(paths, config.indices),
+      route: buildRoute(paths, config.basePath),
       config
     }))
   }, [trains, paths])
@@ -62,33 +63,30 @@ export default function Map() {
   }, [])
 
   //-------------------------------------------------------
-  //      Dynamically add/remove markers for testing
+  //      Dynamically add markers based on schedule data
   //-------------------------------------------------------
   useEffect(() => {
-    const addTimer = setTimeout(() => {
-      console.log('Adding new marker with id=4')
-      setTrains(prevTrains => [
-        ...prevTrains,
-        { 
-          id: 3, 
-          key: 'path-dynamic', 
-          indices: [2], 
-          speedMs: 30, 
-          stepKm: 0.3, 
-          direction: 'forward', 
-          loop: true 
-        }
-      ])
-    }, 20000) // 20 seconds
+    // Create timers for each train in the schedule
+    const timers = scheduleData.map((train) => {
+      return setTimeout(() => {
+        setTrains(prevTrains => [
+          ...prevTrains,
+          {
+            id: train.id,
+            key: String(train.id),
+            basePath: train.basePath,
+            speedMs: train.speedMs,
+            stepKm: train.stepKm,
+            direction: train.direction,
+            loop: train.loop !== undefined ? train.loop : true
+          }
+        ])
+      }, train.start * 1000) // Convert seconds to milliseconds
+    })
 
-    const removeTimer = setTimeout(() => {
-      console.log('Removing marker with id=2')
-      setTrains(prevTrains => prevTrains.filter(train => train.id !== 2))
-    }, 40000) // 40 seconds
-
+    // Cleanup all timers on unmount
     return () => {
-      clearTimeout(addTimer)
-      clearTimeout(removeTimer)
+      timers.forEach(timer => clearTimeout(timer))
     }
   }, [setTrains])
 

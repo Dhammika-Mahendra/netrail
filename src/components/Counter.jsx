@@ -18,7 +18,7 @@ export default function Counter() {
         }
         return prev + 1
       })
-    }, 500)
+    }, 1000)
 
     return () => clearInterval(id)
   }, [isDragging])
