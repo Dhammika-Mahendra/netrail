@@ -17,9 +17,8 @@ export const useAppContext = () => {
 export const AppProvider = ({ children }) => {
 
   const [trains, setTrains] = useState([
-      { key: 'path-1', indices: [2], speedMs: 50, stepKm: 0.5, direction: 'forward', loop: false },
-      { key: 'path-2', indices: [1], speedMs: 50, stepKm: 0.5, direction: 'backward', loop: false },
-      { key: 'path-1-2', indices: [0, 1], speedMs: 50, stepKm: 0.5, direction: 'forward', loop: false }            
+      { id: 1, key: 'path-1', indices: [0], speedMs: 250, stepKm: 0.5, direction: 'forward', loop: true },
+      { id: 2, key: 'path-2', indices: [1], speedMs: 250, stepKm: 0.5, direction: 'backward', loop: true },
   ])
   
   const value = {
