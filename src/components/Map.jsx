@@ -62,48 +62,6 @@ export default function Map() {
       })
   }, [])
 
-  //-------------------------------------------------------
-  //      Dynamically add and remove markers based on schedule data
-  //-------------------------------------------------------
-  useEffect(() => {
-    const timers = []
-
-    // Create add timers for each train in the schedule
-    scheduleData.forEach((train) => {
-      // Timer to add the marker
-      const addTimer = setTimeout(() => {
-        setTrains(prevTrains => [
-          ...prevTrains,
-          {
-            id: train.id,
-            key: String(train.id),
-            basePath: train.basePath,
-            speedMs: train.speedMs,
-            stepKm: train.stepKm,
-            direction: train.direction,
-            loop: train.loop !== undefined ? train.loop : true
-          }
-        ])
-      }, train.start * 1000) // Convert seconds to milliseconds
-      
-      timers.push(addTimer)
-
-      // Timer to remove the marker
-      if (train.end !== undefined) {
-        const removeTimer = setTimeout(() => {
-          setTrains(prevTrains => prevTrains.filter(t => t.id !== train.id))
-        }, train.end * 1000) // Convert seconds to milliseconds
-        
-        timers.push(removeTimer)
-      }
-    })
-
-    // Cleanup all timers on unmount
-    return () => {
-      timers.forEach(timer => clearTimeout(timer))
-    }
-  }, [setTrains])
-
   return (
     <div className='h-full w-full'>
       <MapContainer
