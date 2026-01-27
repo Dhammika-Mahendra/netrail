@@ -16,8 +16,11 @@ export const useAppContext = () => {
 // Context provider component
 export const AppProvider = ({ children }) => {
   
-  const value = {
+  const [count, setCount] = useState(1)
 
+  const value = {
+    count,
+    setCount
   }
 
   return (

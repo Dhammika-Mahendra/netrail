@@ -5,15 +5,17 @@ import * as turf from '@turf/turf'
 import 'leaflet/dist/leaflet.css'
 import pathDataUrl from '../assets/path.geojson?url'
 import arrowSvg from '../assets/arrow.svg?raw'
+import { useAppContext } from '../context/AppContext'
 
 // Component to animate marker
 function AnimatedMarker({ pathCoordinates }) {
+  const { count } = useAppContext()
   const [position, setPosition] = useState(null)
   const [rotation, setRotation] = useState(0)
   const map = useMap()
-  const indexRef = useRef(0)
   const pointsRef = useRef([])
 
+  // Initialize points array when path coordinates change
   useEffect(() => {
     if (!pathCoordinates || pathCoordinates.length === 0) return
 
@@ -21,21 +23,13 @@ function AnimatedMarker({ pathCoordinates }) {
     const line = turf.lineString(pathCoordinates)
     const length = turf.length(line, { units: 'kilometers' })
     
-    // Generate points along the line (every 0.5km for smooth animation)
+    // Generate 1200 points along the line to match the count range (0-1200)
     const points = []
-    const step = 0.5 // kilometers
-    for (let i = 0; i <= length; i += step) {
-      const point = turf.along(line, i, { units: 'kilometers' })
+    const totalPoints = 1200
+    for (let i = 0; i <= totalPoints; i++) {
+      const distance = (i / totalPoints) * length
+      const point = turf.along(line, distance, { units: 'kilometers' })
       points.push(point.geometry.coordinates)
-    }
-    
-    // Add the last point to ensure we reach the end
-    if (points.length > 0) {
-      const lastCoord = pathCoordinates[pathCoordinates.length - 1]
-      if (points[points.length - 1][0] !== lastCoord[0] || 
-          points[points.length - 1][1] !== lastCoord[1]) {
-        points.push(lastCoord)
-      }
     }
     
     pointsRef.current = points
@@ -44,40 +38,38 @@ function AnimatedMarker({ pathCoordinates }) {
     if (points.length > 0) {
       setPosition([points[0][1], points[0][0]])
     }
-
-    // Animation loop
-    const intervalId = setInterval(() => {
-      indexRef.current += 1
-      
-      if (indexRef.current >= pointsRef.current.length) {
-        indexRef.current = 0 // Loop back to start
-      }
-      
-      const currentPoint = pointsRef.current[indexRef.current]
-      const nextPoint = pointsRef.current[(indexRef.current + 1) % pointsRef.current.length]
-      
-      setPosition([currentPoint[1], currentPoint[0]])
-      
-      // Calculate rotation angle between current and next point
-      if (nextPoint) {
-        const bearing = turf.bearing(
-          turf.point(currentPoint),
-          turf.point(nextPoint)
-        )
-        setRotation(bearing)
-      }
-    }, 100) // Update every 100ms for smooth animation
-
-    return () => clearInterval(intervalId)
   }, [pathCoordinates])
+
+  // Update marker position based on count value
+  useEffect(() => {
+    if (pointsRef.current.length === 0) return
+    
+    // Clamp count between 0 and 1200
+    const index = Math.max(0, Math.min(count, 1200))
+    
+    const currentPoint = pointsRef.current[index]
+    const nextIndex = Math.min(index + 1, pointsRef.current.length - 1)
+    const nextPoint = pointsRef.current[nextIndex]
+    
+    setPosition([currentPoint[1], currentPoint[0]])
+    
+    // Calculate rotation angle between current and next point
+    if (nextPoint && index < pointsRef.current.length - 1) {
+      const bearing = turf.bearing(
+        turf.point(currentPoint),
+        turf.point(nextPoint)
+      )
+      setRotation(bearing)
+    }
+  }, [count])
 
   if (!position) return null
 
   const arrowIconWithRotation = L.divIcon({
     className: 'custom-arrow-icon',
-    html: `<div style="width: 32px; height: 32px; transform: rotate(${rotation}deg); transition: transform 0.1s linear;">${arrowSvg}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    html: `<div style="width: 16px; height: 16px; transform: rotate(${rotation}deg); transition: transform 0.1s linear;">${arrowSvg}</div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
   })
 
   return <Marker position={position} icon={arrowIconWithRotation} />
@@ -117,10 +109,6 @@ export default function Map() {
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
         {pathData && (
           <GeoJSON 
             data={pathData}
