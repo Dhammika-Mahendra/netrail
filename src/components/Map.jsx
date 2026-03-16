@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, use } from 'react'
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import pathDataUrl from '../assets/path.geojson?url'
@@ -8,7 +8,7 @@ import scheduleData from '../assets/schedule.json'
 
 export default function Map() {
 
-  const { trains, setTrains } = useAppContext()
+  const { trains, setTrains, count } = useAppContext()
 
   const [pathData, setPathData] = useState(null)
   const [paths, setPaths] = useState([])
@@ -62,6 +62,7 @@ export default function Map() {
       })
   }, [])
 
+
   return (
     <div className='h-full w-full'>
       <MapContainer
@@ -90,10 +91,8 @@ export default function Map() {
               <AnimatedMarker
                 key={id}
                 pathCoordinates={route}
-                speedMs={config.speedMs}
-                stepKm={config.stepKm}
+                progress={count}
                 direction={config.direction}
-                loop={config.loop}
               />
             )
           })

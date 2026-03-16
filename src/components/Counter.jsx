@@ -3,32 +3,33 @@ import { useAppContext } from '../context/AppContext'
 
 export default function Counter() {
 
-  const [value, setValue] = useState(1)
+  const { count, setCount } = useAppContext()
+
   const [isDragging, setIsDragging] = useState(false)
   const dialRef = useRef(null)
 
   // Auto-increment while not dragging
-  useEffect(() => {
-    if (isDragging) return
+  // useEffect(() => {
+  //   if (isDragging) return
 
-    const id = setInterval(() => {
-      setValue(prev => {
-        if (prev >= 120) {
-          return 1
-        }
-        return prev + 1
-      })
-    }, 1000)
+  //   const id = setInterval(() => {
+  //     setCount(prev => {
+  //       if (prev >= 120) {
+  //         return 1
+  //       }
+  //       return prev + 1
+  //     })
+  //   }, 1000)
 
-    return () => clearInterval(id)
-  }, [isDragging])
+  //   return () => clearInterval(id)
+  // }, [isDragging])
 
   const radius = 70
   const center = 90
   const twoPi = 2 * Math.PI
 
-  // Map current value (1–100) to angle, starting from bottom
-  const normalized = (value - 1) / 99 // 0 to 1
+  // Map current count (1–100) to angle, starting from bottom
+  const normalized = (count - 1) / 99 // 0 to 1
   const angle = normalized * twoPi // 0 at bottom, counter-clockwise
 
   // Convert to cartesian: bottom = 0°, counter-clockwise positive
@@ -40,7 +41,7 @@ export default function Counter() {
     setIsDragging(true)
   }
 
-  // Drag handler: move marker around dial and update value
+  // Drag handler: move marker around dial and update count
   useEffect(() => {
     if (!isDragging) return
 
@@ -70,8 +71,8 @@ export default function Counter() {
       if (angleFromBottom < 0) angleFromBottom += twoPi
 
       const percent = angleFromBottom / twoPi
-      const newValue = Math.min(100, Math.max(1, Math.round(percent * 99) + 1))
-      setValue(newValue)
+      const newcount = Math.min(100, Math.max(1, Math.round(percent * 99) + 1))
+      setCount(newcount)
     }
 
     const handleEnd = () => {
@@ -174,7 +175,7 @@ export default function Counter() {
         {/* Content inside dial */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span className="text-5xl font-semibold text-blue-600 leading-none">
-            {value}
+            {count}
           </span>
         </div>
       </div>
